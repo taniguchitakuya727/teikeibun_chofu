@@ -225,7 +225,25 @@
       display: flex;
       justify-content: space-between;
       gap: 12px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .result-title {
+      display: flex;
+      gap: 12px;
       align-items: baseline;
+      min-width: 0;
+    }
+
+    .result-actions {
+      margin-top: 0;
+      flex-wrap: nowrap;
+    }
+
+    .result-actions button {
+      padding: 9px 14px;
+      white-space: nowrap;
     }
 
     .status-line,
@@ -348,8 +366,14 @@
       }
 
       .app-header,
-      .result-top {
+      .result-top,
+      .result-title {
         display: block;
+      }
+
+      .result-actions {
+        flex-wrap: wrap;
+        margin-top: 10px;
       }
 
       .app-header p {
@@ -462,17 +486,19 @@
 
     <div class="card">
       <div class="result-top">
-        <h2>完成した文章</h2>
-        <div id="statusLine" class="status-line"></div>
+        <div class="result-title">
+          <h2>完成した文章</h2>
+          <div id="statusLine" class="status-line"></div>
+        </div>
+
+        <div class="button-row result-actions">
+          <button type="button" class="primary" id="generateButton">定型文を作成</button>
+          <button type="button" class="success" id="copyButton">コピー</button>
+          <button type="button" class="secondary" id="clearButton">クリア</button>
+        </div>
       </div>
 
       <textarea id="result" placeholder="ここに文章が作成されます"></textarea>
-
-      <div class="button-row">
-        <button type="button" class="primary" id="generateButton">定型文を作成</button>
-        <button type="button" class="success" id="copyButton">コピー</button>
-        <button type="button" class="secondary" id="clearButton">クリア</button>
-      </div>
 
       <div id="message" class="message"></div>
     </div>
