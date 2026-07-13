@@ -28,6 +28,60 @@
       margin: 0 auto;
     }
 
+    body.locked .container {
+      display: none;
+    }
+
+    .lock-screen {
+      min-height: 100vh;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    body.locked .lock-screen {
+      display: flex;
+    }
+
+    .lock-card {
+      width: min(100%, 420px);
+      padding: 28px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .lock-card h1 {
+      margin: 0 0 10px;
+      font-size: 24px;
+    }
+
+    .lock-card p {
+      margin: 0 0 18px;
+      color: #666;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .lock-card input {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 12px;
+      border: 1px solid #bbb;
+      border-radius: 8px;
+      font: inherit;
+      text-align: center;
+    }
+
+    .lock-message {
+      min-height: 22px;
+      margin-top: 10px;
+      color: #dc3545;
+      font-weight: bold;
+    }
+
     .app-header {
       display: flex;
       justify-content: space-between;
@@ -64,7 +118,7 @@
 
     .input-grid {
       display: grid;
-      grid-template-columns: minmax(170px, 1.1fr) minmax(150px, 1fr) 92px 92px;
+      grid-template-columns: minmax(180px, 1.2fr) 92px 92px;
       gap: 12px;
       align-items: end;
       margin-bottom: 12px;
@@ -202,6 +256,7 @@
       font-family: inherit;
     }
 
+
     .tag {
       display: inline-block;
       padding: 0 7px;
@@ -303,22 +358,30 @@
   </style>
 </head>
 
-<body>
+<body class="locked">
+  <div class="lock-screen" id="lockScreen">
+    <div class="lock-card">
+      <h1>定型文作成</h1>
+      <p>パスワードを入力してください。一度ログインすると、このブラウザでは次回から自動で開きます。</p>
+      <input id="passwordInput" type="password" autocomplete="current-password" placeholder="パスワード" autofocus>
+      <button type="button" class="primary" id="unlockButton">ログイン</button>
+      <div class="lock-message" id="lockMessage"></div>
+    </div>
+  </div>
+
   <div class="container">
     <header class="app-header">
       <h1>定型文作成</h1>
-      <p>項目を選ぶと文章が自動で更新されます。できた文章はそのままコピーできます。</p>
+      <div>
+        <p>項目を選ぶと文章が自動で更新されます。できた文章はそのままコピーできます。</p>
+        <button type="button" class="secondary" id="lockButton">ロック</button>
+      </div>
     </header>
 
     <div class="card">
       <h2>入力内容</h2>
 
       <div class="input-grid">
-        <div class="field">
-          <label for="shop" class="field-label label-shop">店舗名</label>
-          <select id="shop"></select>
-        </div>
-
         <div class="field">
           <label for="staff" class="field-label label-staff">名前</label>
           <select id="staff"></select>
@@ -373,6 +436,7 @@
           <textarea id="formatEditor"></textarea>
           <div class="button-row">
             <button type="button" class="primary" id="saveFormatButton">フォーマット文を保存</button>
+            <button type="button" class="secondary" id="loadSheetButton">スプレッドシートから読込</button>
             <button type="button" class="secondary" id="resetFormatButton">この定型文を初期状態に戻す</button>
           </div>
         </details>
@@ -420,7 +484,6 @@
         <summary>入力項目の意味</summary>
 
         <div class="note">
-          <p><strong class="label-shop">店舗名</strong>：店舗名</p>
           <p><strong class="label-staff">名前</strong>：スタッフ名</p>
           <p><strong class="label-date">日付</strong>：月日と曜日</p>
           <p><strong class="label-time1">予約時間</strong>：もとの予約時間</p>
@@ -433,6 +496,9 @@
 
   <script>
     "use strict";
+
+    const passwordHash = "35f7e7a74d48d5055cd9495285d6b1c1abe64d8f53fe87e95c3f637bd59d00f1";
+    const authStorageKey = "rirakuruChofuAuthenticated";
 
     const defaultShopSource = `りらくる長府店`;
 
@@ -502,7 +568,6 @@
       text: template.text
     }));
 
-    const shopSelect = document.getElementById("shop");
     const staffSelect = document.getElementById("staff");
     const monthSelect = document.getElementById("month");
     const daySelect = document.getElementById("day");
@@ -533,6 +598,72 @@
       }
     ];
 
+    async function sha256Hex(text) {
+      const bytes = new TextEncoder().encode(text);
+      const hash = await crypto.subtle.digest("SHA-256", bytes);
+
+      return [...new Uint8Array(hash)]
+        .map(byte => byte.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    function unlockApp() {
+      document.body.classList.remove("locked");
+    }
+
+    function lockApp() {
+      localStorage.removeItem(authStorageKey);
+      document.body.classList.add("locked");
+      document.getElementById("passwordInput").value = "";
+      window.setTimeout(() => {
+        document.getElementById("passwordInput").focus();
+      }, 0);
+    }
+
+    async function tryUnlock() {
+      const input = document.getElementById("passwordInput");
+      const lockMessage = document.getElementById("lockMessage");
+      const password = input.value;
+
+      if (!password) {
+        lockMessage.textContent = "パスワードを入力してください";
+        return;
+      }
+
+      const hash = await sha256Hex(password);
+
+      if (hash === passwordHash) {
+        localStorage.setItem(authStorageKey, "1");
+        lockMessage.textContent = "";
+        unlockApp();
+      } else {
+        lockMessage.textContent = "パスワードが違います";
+        input.select();
+      }
+    }
+
+    function prepareAuth() {
+      if (localStorage.getItem(authStorageKey) === "1") {
+        unlockApp();
+      }
+
+      document
+        .getElementById("unlockButton")
+        .addEventListener("click", tryUnlock);
+
+      document
+        .getElementById("passwordInput")
+        .addEventListener("keydown", event => {
+          if (event.key === "Enter") {
+            tryUnlock();
+          }
+        });
+
+      document
+        .getElementById("lockButton")
+        .addEventListener("click", lockApp);
+    }
+
     function showMessage(text) {
       message.textContent = text;
 
@@ -548,13 +679,10 @@
       select.appendChild(option);
     }
 
-    function loadShopList() {
-      shopSelect.innerHTML = "";
-      addOption(shopSelect, defaultShopSource);
-    }
-
     const staffStorageKey = "rirakuruChofuStaffSource";
     const templateStorageKey = "rirakuruChofuTemplates";
+    const spreadsheetApiUrl = "https://script.google.com/macros/s/AKfycbzvC4peaO5p7winBaI15QkFW4k0MDHxB_tOTKeYViI7tplkU4A7HZvjDOXAsD4o0Ct4Pw/exec";
+    const spreadsheetSheetName = "長府店_定型文";
 
     function getStoredStaffSource() {
       return localStorage.getItem(staffStorageKey) || defaultStaffSource;
@@ -771,7 +899,7 @@
       }
 
       const replacements = {
-        "[shop]": shopSelect.value,
+        "[shop]": defaultShopSource,
         "[s]": staffSelect.value,
         "[d]": getDateText()
       };
@@ -807,7 +935,69 @@
       }
     }
 
-    function saveFormatText() {
+    function callSpreadsheetApi(params) {
+      return new Promise((resolve, reject) => {
+        if (!spreadsheetApiUrl) {
+          reject(new Error("スプレッドシート連携URLが未設定です"));
+          return;
+        }
+
+        const callbackName = `sheetCallback_${Date.now()}_${Math.random()
+          .toString(36)
+          .slice(2)}`;
+        const script = document.createElement("script");
+        const url = new URL(spreadsheetApiUrl);
+
+        Object.entries(params).forEach(([key, value]) => {
+          url.searchParams.set(key, value);
+        });
+        url.searchParams.set("sheet", spreadsheetSheetName);
+        url.searchParams.set("callback", callbackName);
+
+        window[callbackName] = data => {
+          delete window[callbackName];
+          script.remove();
+
+          if (data && data.ok) {
+            resolve(data);
+          } else {
+            reject(new Error(data && data.error ? data.error : "スプレッドシート連携に失敗しました"));
+          }
+        };
+
+        script.onerror = () => {
+          delete window[callbackName];
+          script.remove();
+          reject(new Error("スプレッドシートに接続できませんでした"));
+        };
+
+        script.src = url.toString();
+        document.body.appendChild(script);
+      });
+    }
+
+    async function loadFormatsFromSpreadsheet() {
+      try {
+        const data = await callSpreadsheetApi({ action: "list" });
+        const byName = new Map(
+          (data.templates || []).map(item => [item.name, item.text])
+        );
+
+        templates.forEach(template => {
+          if (byName.has(template.name)) {
+            template.text = byName.get(template.name);
+          }
+        });
+
+        saveStoredTemplates();
+        generateText();
+        showMessage("スプレッドシートから読み込みました");
+      } catch (error) {
+        showMessage(error.message);
+      }
+    }
+
+    async function saveFormatText() {
       const template = getSelectedTemplate();
 
       if (!template) {
@@ -825,7 +1015,17 @@
       template.text = formatEditor.value;
       saveStoredTemplates();
       generateText();
-      showMessage("フォーマット文を保存しました");
+
+      try {
+        await callSpreadsheetApi({
+          action: "save",
+          name: template.name,
+          text: template.text
+        });
+        showMessage("スプレッドシートに保存しました");
+      } catch (error) {
+        showMessage(`${error.message} ローカルには保存しました`);
+      }
     }
 
     function resetFormatText() {
@@ -840,7 +1040,7 @@
       template.text = defaultTemplate.text;
       saveStoredTemplates();
       generateText();
-      showMessage("この定型文を初期状態に戻しました");
+      showMessage("この定型文を初期状態に戻しました。必要なら保存ボタンでスプレッドシートへ反映します");
     }
 
     function saveStaffList() {
@@ -885,7 +1085,6 @@
     });
 
     daySelect.addEventListener("change", generateText);
-    shopSelect.addEventListener("change", generateText);
     staffSelect.addEventListener("change", generateText);
     templateSelect.addEventListener("change", generateText);
 
@@ -902,6 +1101,7 @@
       .getElementById("copyButton")
       .addEventListener("click", copyResult);
 
+
     document
       .getElementById("clearButton")
       .addEventListener("click", () => {
@@ -917,6 +1117,10 @@
       .getElementById("resetFormatButton")
       .addEventListener("click", resetFormatText);
 
+    document
+      .getElementById("loadSheetButton")
+      .addEventListener("click", loadFormatsFromSpreadsheet);
+
     formatEditor.addEventListener("input", () => {
       formatPreview.innerHTML = colorizeTags(formatEditor.value);
     });
@@ -929,7 +1133,8 @@
       .getElementById("resetStaffButton")
       .addEventListener("click", resetStaffList);
 
-    loadShopList();
+    prepareAuth();
+
     loadStaffList();
     loadMonths();
     updateDays();
