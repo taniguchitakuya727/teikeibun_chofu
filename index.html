@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>りらくる定型文作成</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #f4f5f7;
+      color: #222;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Hiragino Sans",
+        "Yu Gothic",
+        sans-serif;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+
+    body.locked .container {
+      display: none;
+    }
+
+    .lock-screen {
+      min-height: 100vh;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    body.locked .lock-screen {
+      display: flex;
+    }
+
+    .lock-card {
+      width: min(100%, 420px);
+      padding: 28px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .lock-card h1 {
+      margin: 0 0 10px;
+      font-size: 24px;
+    }
+
+    .lock-card p {
+      margin: 0 0 18px;
+      color: #666;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .lock-card input {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 12px;
+      border: 1px solid #bbb;
+      border-radius: 8px;
+      font: inherit;
+      text-align: center;
+    }
+
+    .lock-message {
+      min-height: 22px;
+      margin-top: 10px;
+      color: #dc3545;
+      font-weight: bold;
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: end;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+
+    .app-header p {
+      margin: 0;
+      color: #555;
+      font-size: 13px;
+      line-height: 1.6;
+      text-align: right;
+    }
+
+    .card {
+      margin-bottom: 16px;
+      padding: 18px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    }
+
+    .input-grid {
+      display: grid;
+      grid-template-columns: minmax(180px, 1.2fr) 92px 92px;
+      gap: 12px;
+      align-items: end;
+      margin-bottom: 12px;
+    }
+
+    .time-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .check-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .check-label input {
+      width: auto;
+      margin: 0;
+    }
+
+    select,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #bbb;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .time-selects {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    textarea {
+      min-height: 130px;
+      line-height: 1.6;
+      resize: vertical;
+    }
+
+    #result {
+      min-height: 190px;
+      font-size: 17px;
+    }
+
+    button {
+      padding: 11px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .primary {
+      background: #246bfd;
+      color: #fff;
+    }
+
+    .secondary {
+      background: #e8e8e8;
+      color: #222;
+    }
+
+    .success {
+      background: #198754;
+      color: #fff;
+    }
+
+    .danger {
+      background: #dc3545;
+      color: #fff;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .result-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+    }
+
+    .status-line,
+    .note {
+      color: #666;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .status-line {
+      white-space: nowrap;
+    }
+
+    .message {
+      min-height: 24px;
+      margin-top: 10px;
+      color: #198754;
+      font-weight: bold;
+    }
+
+    #templatePreview {
+      margin-top: 8px;
+    }
+
+    .format-box {
+      min-height: 110px;
+      margin-top: 8px;
+      padding: 12px;
+      border: 1px solid #d7dce3;
+      border-radius: 8px;
+      background: #fbfcfe;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    #formatEditor {
+      min-height: 150px;
+      margin-top: 8px;
+      font-family: inherit;
+    }
+
+
+    .tag {
+      display: inline-block;
+      padding: 0 7px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    .field-label {
+      font-weight: bold;
+    }
+
+    .tag-shop,
+    .label-shop {
+      color: #0f766e;
+    }
+
+    .tag-shop {
+      background: #ccfbf1;
+    }
+
+    .tag-staff,
+    .label-staff {
+      color: #9b1c1c;
+    }
+
+    .tag-staff {
+      background: #ffe1e1;
+    }
+
+    .tag-date,
+    .label-date {
+      color: #17633a;
+    }
+
+    .tag-date {
+      background: #daf5e7;
+    }
+
+    .tag-time1,
+    .label-time1 {
+      color: #1d4ed8;
+    }
+
+    .tag-time1 {
+      background: #dbeafe;
+    }
+
+    .tag-time2,
+    .label-time2 {
+      color: #7c3aed;
+    }
+
+    .tag-time2 {
+      background: #ede9fe;
+    }
+
+    .tag-time3,
+    .label-time3 {
+      color: #b45309;
+    }
+
+    .tag-time3 {
+      background: #ffedd5;
+    }
+
+    details {
+      margin-top: 12px;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 12px;
+      }
+
+      .app-header,
+      .result-top {
+        display: block;
+      }
+
+      .app-header p {
+        margin-top: 6px;
+        text-align: left;
+      }
+
+      .input-grid,
+      .time-grid {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body class="locked">
+  <div class="lock-screen" id="lockScreen">
+    <div class="lock-card">
+      <h1>定型文作成</h1>
+      <p>パスワードを入力してください。一度ログインすると、このブラウザでは次回から自動で開きます。</p>
+      <input id="passwordInput" type="password" autocomplete="current-password" placeholder="パスワード" autofocus>
+      <button type="button" class="primary" id="unlockButton">ログイン</button>
+      <div class="lock-message" id="lockMessage"></div>
+    </div>
+  </div>
+
+  <div class="container">
+    <header class="app-header">
+      <h1>定型文作成</h1>
+      <div>
+        <p>項目を選ぶと文章が自動で更新されます。できた文章はそのままコピーできます。</p>
+        <button type="button" class="secondary" id="lockButton">ロック</button>
+      </div>
+    </header>
+
+    <div class="card">
+      <h2>入力内容</h2>
+
+      <div class="input-grid">
+        <div class="field">
+          <label class="field-label label-staff check-label">
+            <input id="useStaff" type="checkbox" checked>
+            名前
+          </label>
+          <select id="staff"></select>
+        </div>
+
+        <div class="field">
+          <label class="field-label label-date check-label">
+            <input id="useDate" type="checkbox" checked>
+            日付 月
+          </label>
+          <select id="month"></select>
+        </div>
+
+        <div class="field">
+          <label for="day" class="field-label label-date">日付 日</label>
+          <select id="day"></select>
+        </div>
+      </div>
+
+      <div class="time-grid">
+        <div class="field">
+          <label class="field-label label-time1">予約時間</label>
+          <div class="time-selects">
+            <select id="time1Hour" aria-label="予約時間の時"></select>
+            <select id="time1Minute" aria-label="予約時間の分"></select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label label-time2">変更時間1</label>
+          <div class="time-selects">
+            <select id="time2Hour" aria-label="変更時間1の時"></select>
+            <select id="time2Minute" aria-label="変更時間1の分"></select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label label-time3">変更時間2</label>
+          <div class="time-selects">
+            <select id="time3Hour" aria-label="変更時間2の時"></select>
+            <select id="time3Minute" aria-label="変更時間2の分"></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="templateSelect">定型文</label>
+        <select id="templateSelect"></select>
+        <div id="templatePreview" class="note"></div>
+        <label for="formatPreview">フォーマット文</label>
+        <div id="formatPreview" class="format-box"></div>
+
+        <details>
+          <summary>フォーマット文を編集する</summary>
+          <textarea id="formatEditor"></textarea>
+          <div class="button-row">
+            <button type="button" class="primary" id="saveFormatButton">フォーマット文を保存</button>
+            <button type="button" class="secondary" id="loadSheetButton">スプレッドシートから読込</button>
+            <button type="button" class="secondary" id="resetFormatButton">この定型文を初期状態に戻す</button>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="result-top">
+        <h2>完成した文章</h2>
+        <div id="statusLine" class="status-line"></div>
+      </div>
+
+      <textarea id="result" placeholder="ここに文章が作成されます"></textarea>
+
+      <div class="button-row">
+        <button type="button" class="primary" id="generateButton">定型文を作成</button>
+        <button type="button" class="success" id="copyButton">コピー</button>
+        <button type="button" class="secondary" id="clearButton">クリア</button>
+      </div>
+
+      <div id="message" class="message"></div>
+    </div>
+
+    <div class="card">
+      <details>
+        <summary>スタッフ名リストを編集する</summary>
+
+        <p class="note">
+          スプレッドシートから、そのまま貼り付けられます。
+          各行の一番左の文字を名前として読み込みます。
+          数字だけの行や空欄は除外します。
+        </p>
+
+        <textarea id="staffSource"></textarea>
+
+        <div class="button-row">
+          <button type="button" class="primary" id="saveStaffButton">スタッフ名をスプレッドシートに保存</button>
+          <button type="button" class="secondary" id="loadStaffButton">スプレッドシートから読込</button>
+          <button type="button" class="danger" id="resetStaffButton">初期状態に戻す</button>
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <details>
+        <summary>入力項目の意味</summary>
+
+        <div class="note">
+          <p><strong class="label-staff">名前</strong>：スタッフ名</p>
+          <p><strong class="label-date">日付</strong>：月日と曜日</p>
+          <p><strong class="label-time1">予約時間</strong>：もとの予約時間</p>
+          <p><strong class="label-time2">変更時間1</strong>：変更後・案内可能時間</p>
+          <p><strong class="label-time3">変更時間2</strong>：2つ目の変更後・案内可能時間</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+
+    const passwordHash = "35f7e7a74d48d5055cd9495285d6b1c1abe64d8f53fe87e95c3f637bd59d00f1";
+    const authStorageKey = "rirakuruChofuAuthenticated";
+
+    const defaultShopSource = `りらくる長府店`;
+
+    const defaultStaffSource = `ヨシナカ
+詩子
+志村
+ミネ
+はらだ
+みその
+キリ
+かじ
+コンドウ
+川本
+たくや`;
+
+    const templates = [
+      {
+        name: "予約時間の変更完了",
+        text:
+`ご連絡ありがとうございます。
+お時間[t2]に変更しましたので、
+当日はお気を付けてご来店くださいませ。
+心よりお待ちしております。`
+      },
+      {
+        name: "予約時間の変更依頼",
+        text:
+`いつもご利用ありがとうございます。
+[shop]の[s]です。
+[d][t1]からご予約をいただいておりますが、
+[t2]に変更は可能でしょうか？
+変更の際はこちらにご連絡いただけますと幸いです。`
+      },
+      {
+        name: "早い時間のご案内",
+        text:
+`お世話になっております。
+[shop]の[s]です。
+[t1]からご案内できるようになりましたので
+ご案内いたします。
+もしよろしければご利用くださいませ。
+お気付きになりましたらご連絡ください。`
+      },
+      {
+        name: "本日このあと案内可能",
+        text:
+`お世話になっております。
+[shop]の[s]です。
+本日[t2]、または[t3]からご案内できる時間がございます。
+もしよろしければご利用くださいませ。
+お気付きになりましたらご連絡ください。`
+      },
+      {
+        name: "予約時間より早く案内可能",
+        text:
+`いつもご利用ありがとうございます。
+[shop]の[s]です。
+[d][t1]からご予約をいただいておりますが、
+[t2]からご案内可能です。
+ご都合よろしければ是非ご利用ください。
+変更の際はこちらにご連絡いただけますと幸いです。`
+      }
+    ];
+
+    const defaultTemplates = templates.map(template => ({
+      name: template.name,
+      text: template.text
+    }));
+
+    const staffSelect = document.getElementById("staff");
+    const useStaffCheckbox = document.getElementById("useStaff");
+    const useDateCheckbox = document.getElementById("useDate");
+    const monthSelect = document.getElementById("month");
+    const daySelect = document.getElementById("day");
+    const templateSelect = document.getElementById("templateSelect");
+    const result = document.getElementById("result");
+    const message = document.getElementById("message");
+    const templatePreview = document.getElementById("templatePreview");
+    const formatPreview = document.getElementById("formatPreview");
+    const formatEditor = document.getElementById("formatEditor");
+    const statusLine = document.getElementById("statusLine");
+    const staffSource = document.getElementById("staffSource");
+
+    const timeFields = [
+      {
+        tag: "[t1]",
+        hour: document.getElementById("time1Hour"),
+        minute: document.getElementById("time1Minute")
+      },
+      {
+        tag: "[t2]",
+        hour: document.getElementById("time2Hour"),
+        minute: document.getElementById("time2Minute")
+      },
+      {
+        tag: "[t3]",
+        hour: document.getElementById("time3Hour"),
+        minute: document.getElementById("time3Minute")
+      }
+    ];
+
+    async function sha256Hex(text) {
+      const bytes = new TextEncoder().encode(text);
+      const hash = await crypto.subtle.digest("SHA-256", bytes);
+
+      return [...new Uint8Array(hash)]
+        .map(byte => byte.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    function unlockApp() {
+      document.body.classList.remove("locked");
+    }
+
+    function lockApp() {
+      localStorage.removeItem(authStorageKey);
+      document.body.classList.add("locked");
+      document.getElementById("passwordInput").value = "";
+      window.setTimeout(() => {
+        document.getElementById("passwordInput").focus();
+      }, 0);
+    }
+
+    async function tryUnlock() {
+      const input = document.getElementById("passwordInput");
+      const lockMessage = document.getElementById("lockMessage");
+      const password = input.value;
+
+      if (!password) {
+        lockMessage.textContent = "パスワードを入力してください";
+        return;
+      }
+
+      const hash = await sha256Hex(password);
+
+      if (hash === passwordHash) {
+        localStorage.setItem(authStorageKey, "1");
+        lockMessage.textContent = "";
+        unlockApp();
+      } else {
+        lockMessage.textContent = "パスワードが違います";
+        input.select();
+      }
+    }
+
+    function prepareAuth() {
+      if (localStorage.getItem(authStorageKey) === "1") {
+        unlockApp();
+      }
+
+      document
+        .getElementById("unlockButton")
+        .addEventListener("click", tryUnlock);
+
+      document
+        .getElementById("passwordInput")
+        .addEventListener("keydown", event => {
+          if (event.key === "Enter") {
+            tryUnlock();
+          }
+        });
+
+      document
+        .getElementById("lockButton")
+        .addEventListener("click", lockApp);
+    }
+
+    function showMessage(text) {
+      message.textContent = text;
+
+      window.setTimeout(() => {
+        message.textContent = "";
+      }, 2500);
+    }
+
+    function addOption(select, value, label = value) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = label;
+      select.appendChild(option);
+    }
+
+    const staffStorageKey = "rirakuruChofuStaffSource";
+    const templateStorageKey = "rirakuruChofuTemplates";
+    const spreadsheetApiUrl = "https://script.google.com/macros/s/AKfycbzvC4peaO5p7winBaI15QkFW4k0MDHxB_tOTKeYViI7tplkU4A7HZvjDOXAsD4o0Ct4Pw/exec";
+    const spreadsheetSheetName = "長府店_定型文";
+    const spreadsheetStaffSheetName = "長府店_スタッフ";
+
+    function getStoredStaffSource() {
+      return localStorage.getItem(staffStorageKey) || defaultStaffSource;
+    }
+
+    function extractStaffNames(source) {
+      const names = source
+        .split(/\r?\n/)
+        .map(line => {
+          const columns = line.split("\t");
+          return columns[0].trim();
+        })
+        .filter(name => {
+          if (!name) {
+            return false;
+          }
+
+          if (/^\d+$/.test(name)) {
+            return false;
+          }
+
+          return true;
+        });
+
+      return [...new Set(names)];
+    }
+
+    function loadStaffList() {
+      const source = getStoredStaffSource();
+      const names = extractStaffNames(source);
+
+      staffSource.value = source;
+      staffSelect.innerHTML = "";
+
+      names.forEach(name => {
+        addOption(staffSelect, name);
+      });
+    }
+
+    function loadMonths() {
+      for (let month = 1; month <= 12; month++) {
+        addOption(monthSelect, month, `${month}月`);
+      }
+
+      monthSelect.value = String(new Date().getMonth() + 1);
+    }
+
+    function updateDays() {
+      const selectedDay = Number(daySelect.value);
+      const year = new Date().getFullYear();
+      const month = Number(monthSelect.value);
+      const lastDay = new Date(year, month, 0).getDate();
+
+      daySelect.innerHTML = "";
+
+      for (let day = 1; day <= lastDay; day++) {
+        addOption(daySelect, day, `${day}日`);
+      }
+
+      if (selectedDay && selectedDay <= lastDay) {
+        daySelect.value = String(selectedDay);
+        return;
+      }
+
+      const today = new Date();
+
+      if (month === today.getMonth() + 1) {
+        daySelect.value = String(today.getDate());
+      }
+    }
+
+    function loadTimeParts() {
+      timeFields.forEach(field => {
+        field.hour.innerHTML = "";
+        field.minute.innerHTML = "";
+
+        for (let hour = 9; hour <= 26; hour++) {
+          addOption(field.hour, String(hour), `${hour}時`);
+        }
+
+        for (let minute = 0; minute < 60; minute += 5) {
+          const value = String(minute).padStart(2, "0");
+          addOption(field.minute, value, `${value}分`);
+        }
+      });
+    }
+
+    function loadStoredTemplates() {
+      const saved = localStorage.getItem(templateStorageKey);
+
+      if (!saved) {
+        return;
+      }
+
+      try {
+        const savedTemplates = JSON.parse(saved);
+
+        if (Array.isArray(savedTemplates)) {
+          savedTemplates.forEach((savedTemplate, index) => {
+            if (!templates[index]) {
+              return;
+            }
+
+            if (typeof savedTemplate === "string") {
+              templates[index].text = savedTemplate;
+            } else if (savedTemplate && typeof savedTemplate === "object") {
+              if (typeof savedTemplate.name === "string") {
+                templates[index].name = savedTemplate.name;
+              }
+
+              if (typeof savedTemplate.text === "string") {
+                templates[index].text = savedTemplate.text;
+              }
+            }
+          });
+        }
+      } catch (error) {
+        localStorage.removeItem(templateStorageKey);
+      }
+    }
+
+    function saveStoredTemplates() {
+      const savedTemplates = templates.map(template => ({
+        name: template.name,
+        text: template.text
+      }));
+      localStorage.setItem(templateStorageKey, JSON.stringify(savedTemplates));
+    }
+
+    function loadTemplates() {
+      loadStoredTemplates();
+      templateSelect.innerHTML = "";
+
+      templates.forEach((template, index) => {
+        addOption(templateSelect, String(index), template.name);
+      });
+
+      updateTemplatePreview();
+    }
+
+    function getDateText() {
+      const year = new Date().getFullYear();
+      const month = Number(monthSelect.value);
+      const day = Number(daySelect.value);
+      const date = new Date(year, month - 1, day);
+      const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+      const weekday = weekdays[date.getDay()];
+
+      return `${month}/${day}(${weekday})`;
+    }
+
+    function getTimeText(field) {
+      return `${field.hour.value}:${field.minute.value}`;
+    }
+
+    function getSelectedTemplate() {
+      return templates[Number(templateSelect.value)];
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function colorizeTags(text) {
+      const tagInfo = {
+        shop: { label: "店舗名", className: "tag-shop" },
+        s: { label: "名前", className: "tag-staff" },
+        d: { label: "日付", className: "tag-date" },
+        t1: { label: "予約時間", className: "tag-time1" },
+        t2: { label: "変更時間1", className: "tag-time2" },
+        t3: { label: "変更時間2", className: "tag-time3" }
+      };
+
+      return escapeHtml(text).replace(/\[(shop|s|d|t1|t2|t3)\]/g, (_, tag) => {
+        const info = tagInfo[tag];
+        return `<span class="tag ${info.className}">${info.label}</span>`;
+      });
+    }
+
+    function updateTemplatePreview() {
+      const template = getSelectedTemplate();
+
+      if (!template) {
+        templatePreview.textContent = "";
+        formatPreview.innerHTML = "";
+        return;
+      }
+
+      const labels = {
+        "[shop]": "店舗名",
+        "[s]": "名前",
+        "[d]": "日付",
+        "[t1]": "予約時間",
+        "[t2]": "変更時間1",
+        "[t3]": "変更時間2"
+      };
+      const tags = template.text.match(/\[(shop|s|d|t1|t2|t3)\]/g) || [];
+      const uniqueTags = [...new Set(tags)];
+      const tagText = uniqueTags.length
+        ? uniqueTags.map(tag => labels[tag]).join("、")
+        : "使用項目なし";
+
+      templatePreview.textContent = `使用項目：${tagText}`;
+      formatPreview.innerHTML = colorizeTags(template.text);
+      formatEditor.value = template.text;
+    }
+
+    function updateStatusLine(text) {
+      if (!text) {
+        statusLine.textContent = "";
+        return;
+      }
+
+      const template = getSelectedTemplate();
+      const name = template ? template.name : "定型文";
+      statusLine.textContent = `${name} / ${text.length}文字`;
+    }
+
+    function generateText() {
+      const template = getSelectedTemplate();
+
+      if (!template) {
+        result.value = "";
+        updateStatusLine("");
+        return;
+      }
+
+      const replacements = {
+        "[shop]": defaultShopSource,
+        "[s]": useStaffCheckbox.checked ? staffSelect.value : "",
+        "[d]": useDateCheckbox.checked ? getDateText() : ""
+      };
+
+      timeFields.forEach(field => {
+        replacements[field.tag] = getTimeText(field);
+      });
+
+      let text = template.text;
+
+      Object.entries(replacements).forEach(([tag, value]) => {
+        text = text.split(tag).join(value);
+      });
+
+      result.value = text;
+      updateTemplatePreview();
+      updateStatusLine(text);
+    }
+
+    async function copyResult() {
+      if (!result.value.trim()) {
+        showMessage("コピーする文章がありません");
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(result.value);
+        showMessage("コピーしました");
+      } catch (error) {
+        result.select();
+        document.execCommand("copy");
+        showMessage("コピーしました");
+      }
+    }
+
+    function callSpreadsheetApi(params) {
+      return new Promise((resolve, reject) => {
+        if (!spreadsheetApiUrl) {
+          reject(new Error("スプレッドシート連携URLが未設定です"));
+          return;
+        }
+
+        const callbackName = `sheetCallback_${Date.now()}_${Math.random()
+          .toString(36)
+          .slice(2)}`;
+        const script = document.createElement("script");
+        const url = new URL(spreadsheetApiUrl);
+
+        Object.entries(params).forEach(([key, value]) => {
+          url.searchParams.set(key, value);
+        });
+        url.searchParams.set("sheet", spreadsheetSheetName);
+        url.searchParams.set("callback", callbackName);
+
+        window[callbackName] = data => {
+          delete window[callbackName];
+          script.remove();
+
+          if (data && data.ok) {
+            resolve(data);
+          } else {
+            reject(new Error(data && data.error ? data.error : "スプレッドシート連携に失敗しました"));
+          }
+        };
+
+        script.onerror = () => {
+          delete window[callbackName];
+          script.remove();
+          reject(new Error("スプレッドシートに接続できませんでした"));
+        };
+
+        script.src = url.toString();
+        document.body.appendChild(script);
+      });
+    }
+
+    async function loadFormatsFromSpreadsheet() {
+      try {
+        const selectedIndex = Number(templateSelect.value) || 0;
+        const data = await callSpreadsheetApi({ action: "list" });
+        const sheetTemplates = data.templates || [];
+
+        if (sheetTemplates.length === 0) {
+          showMessage("スプレッドシートに定型文がありません");
+          return;
+        }
+
+        templates.length = 0;
+        sheetTemplates.forEach(item => {
+          templates.push({
+            name: item.name,
+            text: item.text
+          });
+        });
+
+        saveStoredTemplates();
+        loadTemplates();
+        templateSelect.value = String(Math.min(selectedIndex, templates.length - 1));
+        generateText();
+        showMessage("タイトルと本文をスプレッドシートから読み込みました");
+      } catch (error) {
+        showMessage(error.message);
+      }
+    }
+
+    async function saveFormatText() {
+      const template = getSelectedTemplate();
+
+      if (!template) {
+        showMessage("保存する定型文がありません");
+        return;
+      }
+
+      const text = formatEditor.value.trim();
+
+      if (!text) {
+        showMessage("フォーマット文が空です");
+        return;
+      }
+
+      template.text = formatEditor.value;
+      saveStoredTemplates();
+      generateText();
+
+      try {
+        await callSpreadsheetApi({
+          action: "save",
+          name: template.name,
+          text: template.text
+        });
+        showMessage("スプレッドシートに保存しました");
+      } catch (error) {
+        showMessage(`${error.message} ローカルには保存しました`);
+      }
+    }
+
+    function resetFormatText() {
+      const templateIndex = Number(templateSelect.value);
+      const defaultTemplate = defaultTemplates[templateIndex];
+      const template = getSelectedTemplate();
+
+      if (!template || !defaultTemplate) {
+        return;
+      }
+
+      template.text = defaultTemplate.text;
+      saveStoredTemplates();
+      generateText();
+      showMessage("この定型文を初期状態に戻しました。必要なら保存ボタンでスプレッドシートへ反映します");
+    }
+
+    async function loadStaffFromSpreadsheet() {
+      try {
+        const data = await callSpreadsheetApi({
+          action: "listStaff",
+          staffSheet: spreadsheetStaffSheetName
+        });
+        const names = data.staff || [];
+
+        if (names.length === 0) {
+          showMessage("スプレッドシートにスタッフ名がありません");
+          return;
+        }
+
+        staffSource.value = names.join("\n");
+        localStorage.setItem(staffStorageKey, staffSource.value);
+        loadStaffList();
+        generateText();
+        showMessage("スタッフ名をスプレッドシートから読み込みました");
+      } catch (error) {
+        showMessage(error.message);
+      }
+    }
+
+    async function saveStaffList() {
+      const names = extractStaffNames(staffSource.value);
+
+      if (names.length === 0) {
+        showMessage("スタッフ名が見つかりません");
+        return;
+      }
+
+      staffSource.value = names.join("\n");
+      localStorage.setItem(staffStorageKey, staffSource.value);
+      loadStaffList();
+      generateText();
+
+      try {
+        await callSpreadsheetApi({
+          action: "saveStaff",
+          staffSheet: spreadsheetStaffSheetName,
+          names: staffSource.value
+        });
+        showMessage("スタッフ名をスプレッドシートに保存しました");
+      } catch (error) {
+        showMessage(`${error.message} ローカルには保存しました`);
+      }
+    }
+
+    function resetStaffList() {
+      localStorage.removeItem(staffStorageKey);
+      loadStaffList();
+      generateText();
+      showMessage("初期状態に戻しました");
+    }
+
+    function setInitialValues() {
+      const now = new Date();
+
+      monthSelect.value = String(now.getMonth() + 1);
+      updateDays();
+      daySelect.value = String(now.getDate());
+
+      timeFields[0].hour.value = "11";
+      timeFields[0].minute.value = "00";
+      timeFields[1].hour.value = "9";
+      timeFields[1].minute.value = "25";
+      timeFields[2].hour.value = "10";
+      timeFields[2].minute.value = "00";
+    }
+
+    monthSelect.addEventListener("change", () => {
+      updateDays();
+      generateText();
+    });
+
+    daySelect.addEventListener("change", generateText);
+    useStaffCheckbox.addEventListener("change", generateText);
+    useDateCheckbox.addEventListener("change", generateText);
+    staffSelect.addEventListener("change", generateText);
+    templateSelect.addEventListener("change", generateText);
+
+    timeFields.forEach(field => {
+      field.hour.addEventListener("change", generateText);
+      field.minute.addEventListener("change", generateText);
+    });
+
+    document
+      .getElementById("generateButton")
+      .addEventListener("click", generateText);
+
+    document
+      .getElementById("copyButton")
+      .addEventListener("click", copyResult);
+
+
+    document
+      .getElementById("clearButton")
+      .addEventListener("click", () => {
+        result.value = "";
+        updateStatusLine("");
+      });
+
+    document
+      .getElementById("saveFormatButton")
+      .addEventListener("click", saveFormatText);
+
+    document
+      .getElementById("resetFormatButton")
+      .addEventListener("click", resetFormatText);
+
+    document
+      .getElementById("loadSheetButton")
+      .addEventListener("click", loadFormatsFromSpreadsheet);
+
+    formatEditor.addEventListener("input", () => {
+      formatPreview.innerHTML = colorizeTags(formatEditor.value);
+    });
+
+    document
+      .getElementById("saveStaffButton")
+      .addEventListener("click", saveStaffList);
+
+    document
+      .getElementById("loadStaffButton")
+      .addEventListener("click", loadStaffFromSpreadsheet);
+
+    document
+      .getElementById("resetStaffButton")
+      .addEventListener("click", resetStaffList);
+
+    prepareAuth();
+
+    loadStaffList();
+    loadMonths();
+    updateDays();
+    loadTimeParts();
+    loadTemplates();
+    setInitialValues();
+    generateText();
+  </script>
+</body>
+</html>
