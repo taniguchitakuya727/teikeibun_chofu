@@ -473,7 +473,8 @@
         <textarea id="staffSource"></textarea>
 
         <div class="button-row">
-          <button type="button" class="primary" id="saveStaffButton">スタッフ名を保存</button>
+          <button type="button" class="primary" id="saveStaffButton">スタッフ名をスプレッドシートに保存</button>
+          <button type="button" class="secondary" id="loadStaffButton">スプレッドシートから読込</button>
           <button type="button" class="danger" id="resetStaffButton">初期状態に戻す</button>
         </div>
       </details>
@@ -683,6 +684,7 @@
     const templateStorageKey = "rirakuruChofuTemplates";
     const spreadsheetApiUrl = "https://script.google.com/macros/s/AKfycbzvC4peaO5p7winBaI15QkFW4k0MDHxB_tOTKeYViI7tplkU4A7HZvjDOXAsD4o0Ct4Pw/exec";
     const spreadsheetSheetName = "長府店_定型文";
+    const spreadsheetStaffSheetName = "長府店_スタッフ";
 
     function getStoredStaffSource() {
       return localStorage.getItem(staffStorageKey) || defaultStaffSource;
@@ -1043,7 +1045,30 @@
       showMessage("この定型文を初期状態に戻しました。必要なら保存ボタンでスプレッドシートへ反映します");
     }
 
-    function saveStaffList() {
+    async function loadStaffFromSpreadsheet() {
+      try {
+        const data = await callSpreadsheetApi({
+          action: "listStaff",
+          staffSheet: spreadsheetStaffSheetName
+        });
+        const names = data.staff || [];
+
+        if (names.length === 0) {
+          showMessage("スプレッドシートにスタッフ名がありません");
+          return;
+        }
+
+        staffSource.value = names.join("\n");
+        localStorage.setItem(staffStorageKey, staffSource.value);
+        loadStaffList();
+        generateText();
+        showMessage("スタッフ名をスプレッドシートから読み込みました");
+      } catch (error) {
+        showMessage(error.message);
+      }
+    }
+
+    async function saveStaffList() {
       const names = extractStaffNames(staffSource.value);
 
       if (names.length === 0) {
@@ -1051,10 +1076,21 @@
         return;
       }
 
+      staffSource.value = names.join("\n");
       localStorage.setItem(staffStorageKey, staffSource.value);
       loadStaffList();
       generateText();
-      showMessage("スタッフ名を保存しました");
+
+      try {
+        await callSpreadsheetApi({
+          action: "saveStaff",
+          staffSheet: spreadsheetStaffSheetName,
+          names: staffSource.value
+        });
+        showMessage("スタッフ名をスプレッドシートに保存しました");
+      } catch (error) {
+        showMessage(`${error.message} ローカルには保存しました`);
+      }
     }
 
     function resetStaffList() {
@@ -1128,6 +1164,10 @@
     document
       .getElementById("saveStaffButton")
       .addEventListener("click", saveStaffList);
+
+    document
+      .getElementById("loadStaffButton")
+      .addEventListener("click", loadStaffFromSpreadsheet);
 
     document
       .getElementById("resetStaffButton")
