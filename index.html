@@ -172,7 +172,18 @@
     .time-selects {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 0;
+    }
+
+    .time-selects select:first-child {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      border-right: 0;
+    }
+
+    .time-selects select:last-child {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
     }
 
     textarea {
