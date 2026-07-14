@@ -118,7 +118,7 @@
 
     .input-grid {
       display: grid;
-      grid-template-columns: minmax(180px, 1.2fr) 92px 92px;
+      grid-template-columns: minmax(180px, 1.2fr) 184px;
       gap: 12px;
       align-items: end;
       margin-bottom: 12px;
@@ -169,18 +169,21 @@
       background: #fff;
     }
 
+    .date-pair,
     .time-selects {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 0;
     }
 
+    .date-pair select:first-child,
     .time-selects select:first-child {
       border-top-right-radius: 0;
       border-bottom-right-radius: 0;
       border-right: 0;
     }
 
+    .date-pair select:last-child,
     .time-selects select:last-child {
       border-top-left-radius: 0;
       border-bottom-left-radius: 0;
@@ -436,17 +439,15 @@
           <select id="staff"></select>
         </div>
 
-        <div class="field">
+        <div class="field date-field">
           <label class="field-label label-date check-label">
             <input id="useDate" type="checkbox" checked>
-            日付 月
+            日付
           </label>
-          <select id="month"></select>
-        </div>
-
-        <div class="field">
-          <label for="day" class="field-label label-date">日付 日</label>
-          <select id="day"></select>
+          <div class="date-pair">
+            <select id="month" aria-label="月"></select>
+            <select id="day" aria-label="日"></select>
+          </div>
         </div>
       </div>
 
@@ -1051,7 +1052,7 @@
       });
     }
 
-    async function loadFormatsFromSpreadsheet() {
+    async function loadFormatsFromSpreadsheet(options = {}) {
       try {
         const selectedIndex = Number(templateSelect.value) || 0;
         const data = await callSpreadsheetApi({ action: "list" });
@@ -1074,9 +1075,13 @@
         loadTemplates();
         templateSelect.value = String(Math.min(selectedIndex, templates.length - 1));
         generateText();
-        showMessage("タイトルと本文をスプレッドシートから読み込みました");
+        if (!options.silent) {
+          showMessage("タイトルと本文をスプレッドシートから読み込みました");
+        }
       } catch (error) {
-        showMessage(error.message);
+        if (!options.silent) {
+          showMessage(error.message);
+        }
       }
     }
 
@@ -1181,6 +1186,11 @@
       showMessage("初期状態に戻しました");
     }
 
+
+    async function loadInitialSpreadsheetData() {
+      await loadFormatsFromSpreadsheet({ silent: true });
+    }
+
     function setInitialValues() {
       const now = new Date();
 
@@ -1265,6 +1275,7 @@
     loadTemplates();
     setInitialValues();
     generateText();
+    loadInitialSpreadsheetData();
   </script>
 </body>
 </html>
