@@ -946,10 +946,10 @@
     function expandJoinedTimeTags(text, replacements) {
       return text.replace(/\[t2\](?:\s*(?:、または|または)\s*)?\[t3\]/g, () => {
         if (!replacements["[t3]"]) {
-          return `（${replacements["[t2]"]}）`;
+          return replacements["[t2]"];
         }
 
-        return `（${replacements["[t2]"]}）、または（${replacements["[t3]"]}）`;
+        return `${replacements["[t2]"]}、または${replacements["[t3]"]}`;
       });
     }
 
