@@ -365,6 +365,13 @@
       background: #ffedd5;
     }
 
+    .tag-join {
+      display: inline-block;
+      margin: 0 4px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
     details {
       margin-top: 12px;
     }
@@ -920,9 +927,21 @@
         t3: { label: "変更時間2", className: "tag-time3" }
       };
 
-      return escapeHtml(text).replace(/\[(shop|s|d|t1|t2|t3)\]/g, (_, tag) => {
-        const info = tagInfo[tag];
-        return `<span class="tag ${info.className}">${info.label}</span>`;
+      return escapeHtml(text)
+        .replace(/\[t2\]\[t3\]/g, () => {
+          const first = tagInfo.t2;
+          const second = tagInfo.t3;
+          return `<span class="tag ${first.className}">${first.label}</span><span class="tag-join">、または</span><span class="tag ${second.className}">${second.label}</span>`;
+        })
+        .replace(/\[(shop|s|d|t1|t2|t3)\]/g, (_, tag) => {
+          const info = tagInfo[tag];
+          return `<span class="tag ${info.className}">${info.label}</span>`;
+        });
+    }
+
+    function expandJoinedTimeTags(text, replacements) {
+      return text.replace(/\[t2\]\[t3\]/g, () => {
+        return `（${replacements["[t2]"]}）、または（${replacements["[t3]"]}）`;
       });
     }
 
@@ -984,7 +1003,7 @@
         replacements[field.tag] = getTimeText(field);
       });
 
-      let text = template.text;
+      let text = expandJoinedTimeTags(template.text, replacements);
 
       Object.entries(replacements).forEach(([tag, value]) => {
         text = text.split(tag).join(value);
