@@ -476,7 +476,10 @@
         </div>
 
         <div class="field">
-          <label class="field-label label-time3">変更時間2</label>
+          <label class="field-label label-time3 check-label">
+            <input id="useTime3" type="checkbox" checked>
+            変更時間2
+          </label>
           <div class="time-selects">
             <select id="time3Hour" aria-label="変更時間2の時"></select>
             <select id="time3Minute" aria-label="変更時間2の分"></select>
@@ -551,7 +554,7 @@
           <p><strong class="label-date">日付</strong>：月日と曜日</p>
           <p><strong class="label-time1">予約時間</strong>：もとの予約時間</p>
           <p><strong class="label-time2">変更時間1</strong>：変更後・案内可能時間</p>
-          <p><strong class="label-time3">変更時間2</strong>：2つ目の変更後・案内可能時間</p>
+          <p><strong class="label-time3">変更時間2</strong>：2つ目の変更後・案内可能時間。未使用のときはチェックを外します。</p>
         </div>
       </details>
     </div>
@@ -610,7 +613,7 @@
         text:
 `お世話になっております。
 [shop]の[s]です。
-本日[t2]、または[t3]からご案内できる時間がございます。
+本日[t2][t3]からご案内できる時間がございます。
 もしよろしければご利用くださいませ。
 お気付きになりましたらご連絡ください。`
       },
@@ -634,6 +637,7 @@
     const staffSelect = document.getElementById("staff");
     const useStaffCheckbox = document.getElementById("useStaff");
     const useDateCheckbox = document.getElementById("useDate");
+    const useTime3Checkbox = document.getElementById("useTime3");
     const monthSelect = document.getElementById("month");
     const daySelect = document.getElementById("day");
     const templateSelect = document.getElementById("templateSelect");
@@ -928,7 +932,7 @@
       };
 
       return escapeHtml(text)
-        .replace(/\[t2\]\[t3\]/g, () => {
+        .replace(/\[t2\](?:\s*(?:、または|または)\s*)?\[t3\]/g, () => {
           const first = tagInfo.t2;
           const second = tagInfo.t3;
           return `<span class="tag ${first.className}">${first.label}</span><span class="tag-join">、または</span><span class="tag ${second.className}">${second.label}</span>`;
@@ -940,7 +944,11 @@
     }
 
     function expandJoinedTimeTags(text, replacements) {
-      return text.replace(/\[t2\]\[t3\]/g, () => {
+      return text.replace(/\[t2\](?:\s*(?:、または|または)\s*)?\[t3\]/g, () => {
+        if (!replacements["[t3]"]) {
+          return `（${replacements["[t2]"]}）`;
+        }
+
         return `（${replacements["[t2]"]}）、または（${replacements["[t3]"]}）`;
       });
     }
@@ -1000,7 +1008,9 @@
       };
 
       timeFields.forEach(field => {
-        replacements[field.tag] = getTimeText(field);
+        replacements[field.tag] = field.tag === "[t3]" && !useTime3Checkbox.checked
+          ? ""
+          : getTimeText(field);
       });
 
       let text = expandJoinedTimeTags(template.text, replacements);
@@ -1223,6 +1233,17 @@
       timeFields[1].minute.value = "25";
       timeFields[2].hour.value = "10";
       timeFields[2].minute.value = "00";
+      updateTime3Availability(false);
+    }
+
+    function updateTime3Availability(shouldGenerate = true) {
+      const isEnabled = useTime3Checkbox.checked;
+      timeFields[2].hour.disabled = !isEnabled;
+      timeFields[2].minute.disabled = !isEnabled;
+
+      if (shouldGenerate) {
+        generateText();
+      }
     }
 
     monthSelect.addEventListener("change", () => {
@@ -1233,6 +1254,7 @@
     daySelect.addEventListener("change", generateText);
     useStaffCheckbox.addEventListener("change", generateText);
     useDateCheckbox.addEventListener("change", generateText);
+    useTime3Checkbox.addEventListener("change", updateTime3Availability);
     staffSelect.addEventListener("change", generateText);
     templateSelect.addEventListener("change", generateText);
 
